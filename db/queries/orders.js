@@ -42,17 +42,34 @@ export async function getOrderById(id) {
   return order;
 }
 
-export async function getProductOrders(productId, userId) {
+export async function addProductToOrder(orderId, productId, quantity) {
   const sql = `
-    SELECT *
-    FROM orders
-    JOIN orders_products
-        ON orders.id = orders_products.order_id
-    WHERE orders_products.product_id = $1
-    AND orders.user_id =$2;
+    INSERT INTO orders_products
+      (order_id, product_id, quantity)
+    VALUES
+      ($1, $2, $3)
+    RETURNING *;
   `;
 
-  const { rows: orders } = await db.query(sql, [productId, userId]);
+  const {
+    rows: [orderProduct],
+  } = await db.query(sql, [orderId, productId, quantity]);
 
-  return orders;
+  return orderProduct;
+}
+
+export async function getProductsByOrder(orderId) {
+  const sql = `
+    SELECT
+      products.*,
+      orders_products.quantity
+    FROM products
+    JOIN orders_products
+      ON products.id = orders_products.product_id
+    WHERE orders_products.order_id = $1;
+  `;
+
+  const { rows: products } = await db.query(sql, [orderId]);
+
+  return products;
 }

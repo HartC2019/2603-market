@@ -3,9 +3,9 @@ const router = express.Router();
 
 import requireUser from "#middleware/requireUser";
 
-import { getOrderById } from "#db/queries/orders";
+import { getOrderById, getProductsByOrder } from "#db/queries/orders";
 
-router.get("/:id", requireUser, async (req, res, next) => {
+router.get("/:id/products", requireUser, async (req, res, next) => {
   try {
     const order = await getOrderById(req.params.id);
 
@@ -14,10 +14,12 @@ router.get("/:id", requireUser, async (req, res, next) => {
     }
 
     if (order.user_id !== req.user.id) {
-      return res.status(403).send("Forbidden");
+      return res.status(403).send("Forbidden.");
     }
 
-    res.send(order);
+    const products = await getProductsByOrder(order.id);
+
+    res.send(products);
   } catch (err) {
     next(err);
   }
